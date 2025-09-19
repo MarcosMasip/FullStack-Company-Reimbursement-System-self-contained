@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Single-command build & run script for macOS/Linux
+# Usage: ./run.sh [--remote-db]
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+DB_MODE="EMBEDDED"
+if [[ "${1:-}" == "--remote-db" ]]; then
+  DB_MODE="REMOTE"
+fi
+
+echo "[run.sh] Selected DB_MODE=$DB_MODE"
+
+JAR_PATTERN="target/Project1-0.0.1-SNAPSHOT-shaded.jar"
+
+# Ensure Maven Wrapper exists (fallback to system mvn if absent)
+MVN_CMD="./mvnw"
+if [[ ! -x "$MVN_CMD" ]]; then
+  if command -v mvn >/dev/null 2>&1; then
+    echo "[run.sh] Maven wrapper not found, using system mvn"
+    MVN_CMD="mvn"
+  else
+    echo "Error: Maven not available and wrapper missing." >&2
+    exit 1
+  fi
+fi
+
+# Build if jar missing or sources newer than jar
+REBUILD=false
+if [[ ! -f $JAR_PATTERN ]]; then
+  REBUILD=true
+else
+  if [[ $(find src/main/java -type f -newer $JAR_PATTERN | head -n 1) ]]; then
+    REBUILD=true
+  fi
+fi
+
+if $REBUILD; then
+  echo "[run.sh] Building project (this may download dependencies the first time)";
+  $MVN_CMD -q -DskipTests package
+else
+  echo "[run.sh] Reusing existing build (no changes detected)"
+fi
+
+if [[ ! -f $JAR_PATTERN ]]; then
+  echo "Error: Shaded jar not found after build: $JAR_PATTERN" >&2
+  exit 1
+fi
+
+echo "[run.sh] Starting application on http://localhost:7070 (DB_MODE=$DB_MODE)"
+exec java -DB_MODE="$DB_MODE" -jar "$JAR_PATTERN" "$@"

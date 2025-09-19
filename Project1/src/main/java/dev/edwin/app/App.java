@@ -53,6 +53,9 @@ public class App {
 		app.post("/reimbursement", ReimbursementController.updateReimbursement);
 		app.delete("/reimbursement", ReimbursementController.deleteReimbursement);
 
+		// Health check
+		app.get("/health", ctx -> ctx.json("{\"status\":\"UP\"}"));
+
 
 	}
 

@@ -1,0 +1,42 @@
+-- H2 schema (compatible with MariaDB syntax where possible)
+CREATE TABLE IF NOT EXISTS MANAGER (
+    mgid INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    image_url VARCHAR(500)
+);
+
+CREATE TABLE IF NOT EXISTS EMPLOYEE (
+    eid INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    image_url VARCHAR(500),
+    mgid INT,
+    CONSTRAINT fk_employee_manager FOREIGN KEY (mgid) REFERENCES MANAGER(mgid) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS EXPENSE_CATEGORY (
+    cid INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL UNIQUE,
+    image_url VARCHAR(500)
+);
+
+CREATE TABLE IF NOT EXISTS REIMBURSEMENT (
+    rid INT AUTO_INCREMENT PRIMARY KEY,
+    amount DECIMAL(12,2) NOT NULL,
+    submit_date VARCHAR(30) NOT NULL,
+    status INT NOT NULL, -- 0=pending,1=approved,2=denied
+    status_date VARCHAR(30),
+    employee_note VARCHAR(2000),
+    manager_note VARCHAR(2000),
+    cid INT NOT NULL,
+    eid INT NOT NULL,
+    CONSTRAINT fk_reim_employee FOREIGN KEY (eid) REFERENCES EMPLOYEE(eid) ON DELETE CASCADE,
+    CONSTRAINT fk_reim_category FOREIGN KEY (cid) REFERENCES EXPENSE_CATEGORY(cid) ON DELETE RESTRICT
+);
+
+CREATE INDEX IF NOT EXISTS idx_reim_employee ON REIMBURSEMENT(eid);
+CREATE INDEX IF NOT EXISTS idx_reim_category ON REIMBURSEMENT(cid);
+CREATE INDEX IF NOT EXISTS idx_reim_status ON REIMBURSEMENT(status);

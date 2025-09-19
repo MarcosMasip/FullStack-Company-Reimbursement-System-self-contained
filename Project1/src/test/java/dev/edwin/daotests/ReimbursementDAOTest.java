@@ -8,7 +8,7 @@ import java.sql.Date;
 import java.util.List;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ReimbursementDAOTest
+class ReimbursementDAOTest extends dev.edwin.TestDBInit
 {
     private static ReimbursementDAO rdao = ReimbursementDAOImp.getRdao();
     private static EmployeeDAO edao = EmployeeDAOImp.getEdao();

@@ -26,13 +26,12 @@ public class ManagerDAOImp implements ManagerDAO {
 	public Manager createManager(Manager manager)
 	{
 		try(Connection conn = ConnectionUtil.getConnection()){
-			String sql = "INSERT INTO project1_db.MANAGER VALUES (?,?,?,?,?)";
+			String sql = "INSERT INTO MANAGER (email, password, name, image_url) VALUES (?,?,?,?)";
 			PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-			ps.setInt(1, 0);
-			ps.setString(2, manager.getEmail());
-			ps.setString(3, manager.getPassword());
-			ps.setString(4, manager.getName());
-			ps.setString(5, manager.getImage_url());
+			ps.setString(1, manager.getEmail());
+			ps.setString(2, manager.getPassword());
+			ps.setString(3, manager.getName());
+			ps.setString(4, manager.getImage_url());
 			ps.execute();
 
 			ResultSet rs = ps.getGeneratedKeys();
@@ -53,7 +52,7 @@ public class ManagerDAOImp implements ManagerDAO {
 	{
 		try(Connection conn = ConnectionUtil.getConnection())
 		{
-			String sql = "SELECT * FROM project1_db.MANAGER WHERE mgid = ?";
+			String sql = "SELECT * FROM MANAGER WHERE mgid = ?";
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, mgid);
 
@@ -80,7 +79,7 @@ public class ManagerDAOImp implements ManagerDAO {
 	{
 		try(Connection conn = ConnectionUtil.getConnection())
 		{
-			String sql = "SELECT * FROM project1_db.MANAGER";
+			String sql = "SELECT * FROM MANAGER";
 			PreparedStatement ps = conn.prepareStatement(sql);
 
 			ResultSet rs = ps.executeQuery();
@@ -136,7 +135,7 @@ public class ManagerDAOImp implements ManagerDAO {
 	{
 		try(Connection conn = ConnectionUtil.getConnection())
 		{
-			String sql = "DELETE FROM project1_db.MANAGER WHERE mgid = ?";
+			String sql = "DELETE FROM MANAGER WHERE mgid = ?";
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, manager.getMgid());
 

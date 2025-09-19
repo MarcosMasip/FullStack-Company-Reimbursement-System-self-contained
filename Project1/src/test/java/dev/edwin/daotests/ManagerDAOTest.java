@@ -9,7 +9,7 @@ import dev.edwin.entities.Manager;
 import java.util.List;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ManagerDAOTest
+class ManagerDAOTest extends dev.edwin.TestDBInit
 {
 	
 	private ManagerDAO mdao = ManagerDAOImp.getMdao();

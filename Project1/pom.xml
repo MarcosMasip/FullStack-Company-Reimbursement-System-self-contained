@@ -42,20 +42,19 @@
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
 			<version>2.6.1</version>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Embedded H2 database for self-contained local runtime. MODE=MariaDB used in URL to keep SQL compatibility. -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>2.2.224</version>
 		</dependency>
 		
-		 <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-shade-plugin</artifactId>
-            <version>3.2.2</version>
-            <type>maven-plugin</type>
-        </dependency>
+		<!-- maven-shade-plugin declared as plugin below; not needed as dependency -->
         
-        <dependency>
-			<groupId>org.glassfish</groupId>
-			<artifactId>jakarta.el</artifactId>
-			<version>3.0.3</version>
-		</dependency>
+		<!-- Removed jakarta.el / hibernate / validator to slim runtime; not used by current JDBC-based DAOs -->
 
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -64,18 +63,7 @@
 			<scope>test</scope>
 		</dependency>
 		
-		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>5.4.18.Final</version>
-		</dependency>
-
- 		<dependency>
-			<groupId>org.hibernate.validator</groupId>
-			<artifactId>hibernate-validator</artifactId>
-			<version>6.1.5.Final</version>
-		</dependency>
+        <!-- (Hibernate dependencies removed) -->
         
 
 	</dependencies>
@@ -99,6 +87,7 @@
                                     <mainClass>dev.edwin.app.App</mainClass>
                                 </transformer>
                             </transformers>
+								<createDependencyReducedPom>true</createDependencyReducedPom>
                         </configuration>
                     </execution>
                 </executions>
@@ -115,4 +104,24 @@
 
         </plugins>
     </build>
+
+	<profiles>
+		<!-- Default embedded profile (active by default) -->
+		<profile>
+			<id>embedded</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<db.mode>EMBEDDED</db.mode>
+			</properties>
+		</profile>
+		<!-- Remote DB profile (use with -Premote-db) -->
+		<profile>
+			<id>remote-db</id>
+			<properties>
+				<db.mode>REMOTE</db.mode>
+			</properties>
+		</profile>
+	</profiles>
 </project>

@@ -37,14 +37,13 @@ public class EmployeeDAOImp implements EmployeeDAO
 	@Override
 	public Employee createEmployee(Employee employee) {
 		try(Connection conn = ConnectionUtil.getConnection()){
-			String sql = "INSERT INTO project1_db.EMPLOYEE VALUES (?,?,?,?,?,?)";
+			String sql = "INSERT INTO EMPLOYEE (email, password, name, image_url, mgid) VALUES (?,?,?,?,?)";
 			PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-			ps.setInt(1, 0);
-			ps.setString(2, employee.getEmail());
-			ps.setString(3, employee.getPassword());
-			ps.setString(4, employee.getName());
-			ps.setString(5, employee.getImage_url());
-			ps.setInt(6, employee.getMgid());
+			ps.setString(1, employee.getEmail());
+			ps.setString(2, employee.getPassword());
+			ps.setString(3, employee.getName());
+			ps.setString(4, employee.getImage_url());
+			ps.setInt(5, employee.getMgid());
 			ps.execute();
 
 			ResultSet rs = ps.getGeneratedKeys();
@@ -64,7 +63,7 @@ public class EmployeeDAOImp implements EmployeeDAO
 	public Employee getEmployeeById(int eid) {
 		try(Connection conn = ConnectionUtil.getConnection())
 		{
-			String sql = "SELECT * FROM project1_db.EMPLOYEE WHERE eid = ?";
+			String sql = "SELECT * FROM EMPLOYEE WHERE eid = ?";
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, eid);
 
@@ -91,7 +90,7 @@ public class EmployeeDAOImp implements EmployeeDAO
 	public List<Employee> getAllEmployees() {
 		try(Connection conn = ConnectionUtil.getConnection())
 		{
-			String sql = "SELECT * FROM project1_db.EMPLOYEE";
+			String sql = "SELECT * FROM EMPLOYEE";
 			PreparedStatement ps = conn.prepareStatement(sql);
 
 			ResultSet rs = ps.executeQuery();
@@ -148,7 +147,7 @@ public class EmployeeDAOImp implements EmployeeDAO
 	public boolean deleteEmployee(Employee employee) {
 		try(Connection conn = ConnectionUtil.getConnection())
 		{
-			String sql = "DELETE FROM project1_db.EMPLOYEE WHERE eid = ?";
+			String sql = "DELETE FROM EMPLOYEE WHERE eid = ?";
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, employee.getEid());
 

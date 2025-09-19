@@ -8,7 +8,7 @@ import org.junit.jupiter.api.*;
 import java.util.List;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ExpenseCategoryDAOTest {
+class ExpenseCategoryDAOTest extends dev.edwin.TestDBInit {
 
     private static ExpenseCategoryDAO ecdao = ExpenseCategoryDAOImp.getEdao();
 

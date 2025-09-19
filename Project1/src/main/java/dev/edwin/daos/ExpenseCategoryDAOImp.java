@@ -25,11 +25,10 @@ public class ExpenseCategoryDAOImp implements ExpenseCategoryDAO {
     @Override
     public ExpenseCategory createExpenseCategory(ExpenseCategory expenseCategory) {
         try(Connection conn = ConnectionUtil.getConnection()){
-            String sql = "INSERT INTO project1_db.EXPENSE_CATEGORY VALUES (?,?,?)";
+            String sql = "INSERT INTO EXPENSE_CATEGORY (title, image_url) VALUES (?,?)";
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, 0);
-            ps.setString(2, expenseCategory.getTitle());
-            ps.setString(3, expenseCategory.getImage_url());
+            ps.setString(1, expenseCategory.getTitle());
+            ps.setString(2, expenseCategory.getImage_url());
 
             ps.execute();
 
@@ -50,7 +49,7 @@ public class ExpenseCategoryDAOImp implements ExpenseCategoryDAO {
     public ExpenseCategory getExpenseCategoryById(int cid) {
         try(Connection conn = ConnectionUtil.getConnection())
         {
-            String sql = "SELECT * FROM project1_db.EXPENSE_CATEGORY WHERE cid = ?";
+            String sql = "SELECT * FROM EXPENSE_CATEGORY WHERE cid = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, cid);
 
@@ -75,7 +74,7 @@ public class ExpenseCategoryDAOImp implements ExpenseCategoryDAO {
     public List<ExpenseCategory> getAllExpenseCategories() {
         try(Connection conn = ConnectionUtil.getConnection())
         {
-            String sql = "SELECT * FROM project1_db.EXPENSE_CATEGORY";
+            String sql = "SELECT * FROM EXPENSE_CATEGORY";
             PreparedStatement ps = conn.prepareStatement(sql);
 
             ResultSet rs = ps.executeQuery();

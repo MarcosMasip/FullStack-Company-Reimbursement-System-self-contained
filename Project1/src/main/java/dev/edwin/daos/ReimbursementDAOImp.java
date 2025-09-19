@@ -25,17 +25,16 @@ public class ReimbursementDAOImp implements ReimbursementDAO {
     public Reimbursement createReimbursement(Reimbursement reimbursement)
     {
         try(Connection conn = ConnectionUtil.getConnection()){
-            String sql = "INSERT INTO project1_db.REIMBURSEMENT VALUES (?,?,?,?,?,?,?,?,?)";
+            String sql = "INSERT INTO REIMBURSEMENT (amount, submit_date, status, status_date, employee_note, manager_note, cid, eid) VALUES (?,?,?,?,?,?,?,?)";
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, 0);
-            ps.setDouble(2, reimbursement.getAmount());
-            ps.setString(3, reimbursement.getSubmit_date().toString());
-            ps.setInt(4, reimbursement.getStatus());
-            ps.setString(5, reimbursement.getStatus_date().toString());
-            ps.setString(6, reimbursement.getEmployee_note());
-            ps.setString(7, reimbursement.getManager_note());
-            ps.setInt(8, reimbursement.getCid());
-            ps.setInt(9, reimbursement.getEid());
+            ps.setDouble(1, reimbursement.getAmount());
+            ps.setString(2, reimbursement.getSubmit_date());
+            ps.setInt(3, reimbursement.getStatus());
+            ps.setString(4, reimbursement.getStatus_date());
+            ps.setString(5, reimbursement.getEmployee_note());
+            ps.setString(6, reimbursement.getManager_note());
+            ps.setInt(7, reimbursement.getCid());
+            ps.setInt(8, reimbursement.getEid());
             ps.execute();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -56,7 +55,7 @@ public class ReimbursementDAOImp implements ReimbursementDAO {
     {
         try(Connection conn = ConnectionUtil.getConnection())
         {
-            String sql = "SELECT * FROM project1_db.REIMBURSEMENT WHERE rid = ?";
+            String sql = "SELECT * FROM REIMBURSEMENT WHERE rid = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, rid);
 
@@ -88,7 +87,7 @@ public class ReimbursementDAOImp implements ReimbursementDAO {
     {
         try(Connection conn = ConnectionUtil.getConnection())
         {
-            String sql = "SELECT * FROM project1_db.REIMBURSEMENT";
+            String sql = "SELECT * FROM REIMBURSEMENT";
             PreparedStatement ps = conn.prepareStatement(sql);
 
             ResultSet rs = ps.executeQuery();
@@ -153,7 +152,7 @@ public class ReimbursementDAOImp implements ReimbursementDAO {
     {
         try(Connection conn = ConnectionUtil.getConnection())
         {
-            String sql = "DELETE FROM project1_db.REIMBURSEMENT WHERE rid = ?";
+            String sql = "DELETE FROM REIMBURSEMENT WHERE rid = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, reimbursement.getRid());
 

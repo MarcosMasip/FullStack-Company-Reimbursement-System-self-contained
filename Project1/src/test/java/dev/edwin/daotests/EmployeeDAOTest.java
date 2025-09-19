@@ -8,7 +8,7 @@ import org.junit.jupiter.api.*;
 import java.util.List;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class EmployeeDAOTest
+class EmployeeDAOTest extends dev.edwin.TestDBInit
 {
 
     private static EmployeeDAO edao = EmployeeDAOImp.getEdao();
