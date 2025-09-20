@@ -6,19 +6,78 @@ Self‑contained Java (Javalin) + vanilla JS expense reimbursement demo. Employe
 The project now runs 100% locally with an embedded H2 database (MariaDB compatibility mode) – no external services required. A single command builds and launches the app and auto‑seeds sample data.
 
 ## 🚀 Quick Start
-Clone the repository, then run a SINGLE command (macOS/Linux) from repo root (no need to install Maven or create a database manually—wrapper + embedded DB handle everything):
+Follow these steps exactly (works on macOS, Linux, and Windows). No manual DB setup and no global Maven install required.
 
+### 1. Clone
+```bash
+git clone https://github.com/MarcosMasip/FullStack-Company-Reimbursement-System-self-contained.git
+cd FullStack-Company-Reimbursement-System-self-contained
+```
+
+Expected (truncated) output after clone (lines may vary):
+```
+Cloning into 'FullStack-Company-Reimbursement-System-self-contained'...
+Resolving deltas: 100% (...)
+```
+
+### 2. (macOS/Linux) Ensure execute permission (first time only)
+If scripts already executable this step prints nothing.
+```bash
+chmod +x run.sh Project1/run.sh Project1/mvnw || true
+```
+
+### 3. Run (Build + Start)
+macOS/Linux:
 ```bash
 ./run.sh
 ```
 
-Windows (Command Prompt or PowerShell) from repo root (also a single command):
-
+Windows (PowerShell or CMD):
 ```bat
 run.bat
 ```
 
-You can also run the scripts inside `Project1/` directly (advanced use). Then open:
+First run expected output (abridged):
+```
+[run.sh] Selected DB_MODE=EMBEDDED
+[run.sh] Building project (this may download dependencies the first time)
+... (Maven downloads) ...
+[run.sh] Starting application on http://localhost:7070 (DB_MODE=EMBEDDED)
+INFO io.javalin.Javalin - Starting Javalin ...
+INFO io.javalin.Javalin - Listening on http://localhost:7070/
+INFO io.javalin.Javalin - Javalin started in XXms \o/
+```
+
+Subsequent runs (with no code changes) expected output:
+```
+[run.sh] Selected DB_MODE=EMBEDDED
+[run.sh] Reusing existing build (no changes detected)
+[run.sh] Starting application on http://localhost:7070 (DB_MODE=EMBEDDED)
+...
+```
+
+### 4. Open the App
+```
+http://localhost:7070/public/index.html
+```
+
+### 5. Verify Health Endpoint
+Browser or curl:
+```
+http://localhost:7070/health
+```
+Expected response body:
+```json
+{"status":"UP"}
+```
+
+### 6. (Optional) Build Only (CI / cache warm)
+```
+./run.sh --no-start   # macOS/Linux
+run.bat build         # Windows (if you add a simple 'build' mode later)
+```
+
+You can also run the scripts inside `Project1/` directly (advanced use), but root scripts are preferred.
 
 ```
 http://localhost:7070/public/index.html
@@ -103,7 +162,7 @@ Build only:
 ./mvnw -DskipTests package
 ```
 
-Run jar directly (after build):
+Run jar directly (after build) (advanced/manual):
 
 ```bash
 java -jar target/Project1-0.0.1-SNAPSHOT.jar
@@ -142,10 +201,15 @@ To just compile (useful in CI or to warm the local Maven cache) without launchin
 ```bash
 ./run.sh --no-start
 ```
-Or (inside `Project1/`):
-
+Inside `Project1/` you can also run:
 ```bash
 ./run.sh --build-only
+```
+Expected output (abridged):
+```
+[run.sh] Selected DB_MODE=EMBEDDED
+[run.sh] Building project (this may download dependencies the first time)
+[run.sh] Build completed. Skipping startup due to --no-start flag.
 ```
 
 ## 🧭 Roadmap / Ideas
