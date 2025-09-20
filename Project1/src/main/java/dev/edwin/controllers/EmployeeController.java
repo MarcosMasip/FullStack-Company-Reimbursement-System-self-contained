@@ -67,11 +67,13 @@ public class EmployeeController
 		
 		if(name != null)
 		{
-			employees.add(eserv.getEmployeeByName(name));
+			Employee e = eserv.getEmployeeByName(name);
+			if (e != null) employees.add(e);
 		}
 		else if (email != null)
 		{
-			employees.add(eserv.getEmployeeByEmail(email));
+			Employee e = eserv.getEmployeeByEmail(email);
+			if (e != null) employees.add(e);
 		}
 		else if (manager != null)
 		{

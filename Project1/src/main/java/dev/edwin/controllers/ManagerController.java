@@ -66,11 +66,13 @@ public class ManagerController
 
         if(name != null)
         {
-            managers.add(mserv.getManagerByName(name));
+            Manager m = mserv.getManagerByName(name);
+            if (m != null) managers.add(m);
         }
         else if (email != null)
         {
-            managers.add(mserv.getManagerByEmail(email));
+            Manager m = mserv.getManagerByEmail(email);
+            if (m != null) managers.add(m);
         }
         else
         {

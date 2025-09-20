@@ -2,13 +2,14 @@
 set -euo pipefail
 
 # Single-command build & run script for macOS/Linux
-# Usage: ./run.sh [--remote-db] [--no-start|--build-only]
+# Usage: ./run.sh [--remote-db] [--no-start|--build-only] [--force-build]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 DB_MODE="EMBEDDED"
 START_APP=true
+FORCE_BUILD=false
 
 for arg in "$@"; do
   case "$arg" in
@@ -17,6 +18,9 @@ for arg in "$@"; do
       shift ;;
     --no-start|--build-only)
       START_APP=false;
+      shift ;;
+    --force-build)
+      FORCE_BUILD=true;
       shift ;;
     *)
       # leave unknown args for the java process
@@ -47,9 +51,14 @@ REBUILD=false
 if [[ ! -f $JAR_PATTERN ]]; then
   REBUILD=true
 else
-  if [[ $(find src/main/java -type f -newer $JAR_PATTERN | head -n 1) ]]; then
+  if [[ $(find src/main/java src/main/resources -type f -newer $JAR_PATTERN | head -n 1) ]]; then
     REBUILD=true
   fi
+fi
+
+if $FORCE_BUILD; then
+  echo "[run.sh] --force-build specified; rebuilding regardless of timestamps"
+  REBUILD=true
 fi
 
 if $REBUILD; then

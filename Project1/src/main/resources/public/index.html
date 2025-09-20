@@ -41,7 +41,7 @@
     <!-- Log in form -->
     <div class="container" style="padding: 20em;">
       <!-- Log-in Form w/ BS4 validation -->
-      <form id="form" class="needs-validation" novalidate>
+  <form id="form" class="needs-validation" novalidate onsubmit="return false;">
           <div class="form-group">
             <label for="email">E-mail:</label>
             <input type="email" class="form-control" id="emailInput" placeholder="Enter Email" name="Email Input" required>
@@ -78,6 +78,7 @@
               <div class="invalid-feedback">Check this checkbox to continue.</div>
             </label>
           </div>
+          <div id="loginError" class="text-danger" style="display:none; margin-bottom:0.75rem;"></div>
           <button type="button" onclick="verifyUser()" class="btn btn-primary">Submit</button>
         </form>
         <div id="spinners" class="row" style="margin-top: 2em; display: none;">
