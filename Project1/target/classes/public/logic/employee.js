@@ -26,18 +26,27 @@ function safeUserArray() {
     } catch (e) { return []; }
 }
 
+function setUserArray(arr){
+    try { localStorage.setItem('data', JSON.stringify(arr)); } catch(e){ console.warn('[employee] Failed to persist user array', e);} 
+}
+
 async function reconstructSessionIfNeeded(){
     const existing = safeUserArray();
     if (existing.length > 0) return existing;
     const email = sessionStorage.getItem('email');
     if (!email) return [];
     try {
-        const resp = await fetch(`${BASE}/employees?email=${encodeURIComponent(email)}`);
-        if (!resp.ok) return [];
-        const arr = await resp.json();
-        if (Array.isArray(arr) && arr.length > 0) {
-            localStorage.setItem('data', JSON.stringify(arr));
-            return arr;
+        // Prefer new single-object endpoint first for clarity
+        const single = await fetch(`${BASE}/employee-by-email?email=${encodeURIComponent(email)}`);
+        if (single.ok){
+            const obj = await single.json();
+            if (obj && obj.eid){ setUserArray([obj]); return [obj]; }
+        }
+        // Fallback to legacy array endpoint
+        const legacy = await fetch(`${BASE}/employees?email=${encodeURIComponent(email)}`);
+        if (legacy.ok){
+            const arr = await legacy.json();
+            if (Array.isArray(arr) && arr.length > 0){ setUserArray(arr); return arr; }
         }
     } catch(e){ console.warn('[employee] reconstructSessionIfNeeded failed', e); }
     return [];
@@ -49,9 +58,9 @@ async function populateEmployeeTable(){
         userArr = await reconstructSessionIfNeeded();
     }
     if (userArr.length === 0) {
-        console.warn("[employee] No user data in localStorage; redirecting to login");
+        console.warn("[employee] No user data after reconstruction");
         const tb = document.getElementById('tableBody');
-        if (tb) tb.innerHTML = `<tr><td colspan="4" class="text-center text-warning">No session. Please <a href='index.html'>login</a>.</td></tr>`;
+        if (tb) tb.innerHTML = `<tr><td colspan=\"4\" class=\"text-center text-warning\">No active session. <a href='index.html'>Login</a> or <a href='#' onclick='attemptSessionHeal();return false;'>Retry</a>.</td></tr>`;
         return;
     }
     // Ensure role matches this page
@@ -64,8 +73,14 @@ async function populateEmployeeTable(){
     const eid = typeof eidRaw === 'number' ? eidRaw : parseInt(eidRaw, 10);
     if (!Number.isInteger(eid) || eid <= 0) {
         console.error('[employee] Invalid eid in cached user array', eidRaw, userArr[0]);
+        // Attempt one healing reconstruction
+        localStorage.removeItem('data');
+        const healed = await reconstructSessionIfNeeded();
+        if (healed.length > 0 && Number.isInteger(healed[0].eid) && healed[0].eid > 0){
+            return populateEmployeeTable();
+        }
         const tableBody = document.getElementById('tableBody');
-        if (tableBody) tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Session invalid. Please log out and log back in.</td></tr>`;
+        if (tableBody) tableBody.innerHTML = `<tr><td colspan=\"4\" class=\"text-center text-danger\">Session invalid. <a href='#' onclick='attemptSessionHeal();return false;'>Attempt repair</a> or <a href='index.html'>Login again</a>.</td></tr>`;
         return;
     }
     let tableBody = document.getElementById("tableBody");
@@ -189,9 +204,9 @@ async function uploadNewReimbursement(event){
     if (event) event.preventDefault();
     const userArr = safeUserArray();
     if (currentRole() && currentRole() !== 'employees') { alert('Invalid role for creating reimbursements.'); return; }
-    if (userArr.length === 0) { alert("Session expired. Please login again."); return; }
+    if (userArr.length === 0) { alert("Session expired. Attempting repair..."); await attemptSessionHeal(); return; }
     const eid = userArr[0].eid;
-    if (!eid || isNaN(parseInt(eid,10))) { alert('Invalid employee id in session. Please re-login.'); return; }
+    if (!eid || isNaN(parseInt(eid,10))) { alert('Invalid employee id in session. Attempting repair.'); await attemptSessionHeal(); return; }
     let employee_note = document.getElementById("rComment").value.trim();
     let rAmountRaw = document.getElementById("amount").value.trim();
     const rAmount = parseFloat(rAmountRaw);
@@ -227,5 +242,20 @@ async function uploadNewReimbursement(event){
     } catch (e){
         console.error('[employee] Failed to submit reimbursement', e);
         alert('Failed to submit reimbursement: ' + e.message);
+    }
+}
+
+// Manual repair hook
+async function attemptSessionHeal(){
+    console.log('[employee] attemptSessionHeal invoked');
+    const email = sessionStorage.getItem('email');
+    if (!email){ alert('No stored email. Please login.'); return; }
+    localStorage.removeItem('data');
+    const rebuilt = await reconstructSessionIfNeeded();
+    if (rebuilt.length > 0){
+        console.log('[employee] Session repaired for eid', rebuilt[0].eid);
+        populateEmployeeTable();
+    } else {
+        alert('Automatic repair failed. Please login again.');
     }
 }

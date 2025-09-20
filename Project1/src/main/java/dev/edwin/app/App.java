@@ -42,6 +42,7 @@ public class App {
 
 		app.get("/managers", ManagerController.getAllManagers);
 		app.get("/manager/:mid", ManagerController.getManagerById);
+		app.get("/manager-by-email", ManagerController.getManagerSingleByEmail);
 
 		app.post("/manager", ManagerController.updateManager);
 		app.delete("/manager", ManagerController.deleteManager);

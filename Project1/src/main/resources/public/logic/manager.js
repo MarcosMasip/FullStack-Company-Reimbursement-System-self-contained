@@ -24,18 +24,26 @@ function safeManagerArray(){
     } catch(e){return [];} 
 }
 
+function setManagerArray(arr){
+    try { localStorage.setItem('data', JSON.stringify(arr)); } catch(e){ console.warn('[manager] persist failed', e);} 
+}
+
 async function reconstructManagerSessionIfNeeded(){
     const existing = safeManagerArray();
     if (existing.length > 0) return existing;
     const email = sessionStorage.getItem('email');
     if (!email) return [];
     try {
+        // Prefer single manager endpoint first
+        const s = await fetch(`${BASE}/manager-by-email?email=${encodeURIComponent(email)}`);
+        if (s.ok){
+            const obj = await s.json();
+            if (obj && obj.mgid){ setManagerArray([obj]); return [obj]; }
+        }
         const resp = await fetch(`${BASE}/managers?email=${encodeURIComponent(email)}`);
-        if (!resp.ok) return [];
-        const arr = await resp.json();
-        if (Array.isArray(arr) && arr.length > 0){
-            localStorage.setItem('data', JSON.stringify(arr));
-            return arr;
+        if (resp.ok){
+            const arr = await resp.json();
+            if (Array.isArray(arr) && arr.length > 0){ setManagerArray(arr); return arr; }
         }
     } catch(e){ console.warn('[manager] reconstructManagerSessionIfNeeded failed', e); }
     return [];
@@ -49,10 +57,19 @@ async function populateManagerTable(){
         mArr = await reconstructManagerSessionIfNeeded();
     }
     if (mArr.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">No manager session</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan=\"4\" class=\"text-center text-warning\">No manager session. <a href='index.html'>Login</a> or <a href='#' onclick='attemptManagerHeal();return false;'>Retry</a>.</td></tr>`;
         return;
     }
-    const mgid = mArr[0].mgid;
+    const mgidRaw = mArr[0].mgid;
+    const mgid = typeof mgidRaw === 'number' ? mgidRaw : parseInt(mgidRaw,10);
+    if (!Number.isInteger(mgid) || mgid <= 0){
+        console.error('[manager] Invalid mgid in cache', mgidRaw, mArr[0]);
+        localStorage.removeItem('data');
+        const healed = await reconstructManagerSessionIfNeeded();
+        if (healed.length > 0 && healed[0].mgid){ return populateManagerTable(); }
+        tableBody.innerHTML = `<tr><td colspan=\"4\" class=\"text-center text-danger\">Session invalid. <a href='#' onclick='attemptManagerHeal();return false;'>Attempt repair</a>.</td></tr>`;
+        return;
+    }
     try {
         let response = await fetch(`${BASE}/reimbursements?managerId=${mgid}`, { cache: 'no-store' });
         if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -70,7 +87,13 @@ async function populateManagerTable(){
                 </tr>`;
         }
         if (info.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No reimbursements yet</td></tr>`;
+            // Provide diagnostic counts
+            let empResp = await fetch(`${BASE}/employees?manager=${mgid}`);
+            let empCount = 0;
+            if (empResp.ok){
+                try { const empArr = await empResp.json(); empCount = Array.isArray(empArr)? empArr.length : 0; } catch(_){}
+            }
+            tableBody.innerHTML = `<tr><td colspan=\"4\" class=\"text-center\">No reimbursements yet (employees assigned: ${empCount}).</td></tr>`;
         }
     } catch (e){
         console.error('[manager] Failed to load reimbursements', e);
@@ -197,4 +220,18 @@ function cleanTable()
     let tableBody = document.getElementById("tableBody");
 
     tableBody.innerHTML = "";
+}
+
+async function attemptManagerHeal(){
+    console.log('[manager] attemptManagerHeal invoked');
+    const email = sessionStorage.getItem('email');
+    if (!email){ alert('No stored email. Please login.'); return; }
+    localStorage.removeItem('data');
+    const rebuilt = await reconstructManagerSessionIfNeeded();
+    if (rebuilt.length > 0){
+        console.log('[manager] Session repaired mgid', rebuilt[0].mgid);
+        populateManagerTable();
+    } else {
+        alert('Repair failed. Please login again.');
+    }
 }

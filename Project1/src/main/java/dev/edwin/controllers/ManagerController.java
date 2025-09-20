@@ -84,6 +84,21 @@ public class ManagerController
         ctx.status(200);
     };
 
+    // Single manager by email (session repair support)
+    public static Handler getManagerSingleByEmail = ctx -> {
+        String email = ctx.queryParam("email");
+        if (email == null || email.trim().isEmpty()) {
+            ctx.status(400).result("{\"error\":\"email query parameter required\"}");
+            return;
+        }
+        Manager m = mserv.getManagerByEmail(email.trim());
+        if (m == null) {
+            ctx.status(404).result("{\"error\":\"manager not found\"}");
+            return;
+        }
+        ctx.status(200).result(gson.toJson(m));
+    };
+
 
     public static Handler updateManager = (ctx) -> {
         String body = ctx.body();
