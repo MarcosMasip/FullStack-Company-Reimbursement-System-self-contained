@@ -194,7 +194,9 @@ java -DB_MODE=REMOTE -jar target/Project1-0.0.1-SNAPSHOT.jar
 Tests will execute against embedded DB automatically (DB_MODE defaults to EMBEDDED). If you introduce stateful tests, consider truncating tables between cases.
 
 ## 🧹 Removed Dependencies
-Hibernate & related libs were removed (DAOs are pure JDBC). `HibernateUtil` deleted.
+Hibernate & related libs were removed (DAOs are pure JDBC). `HibernateUtil` removed (file deleted).
+
+Ignored Artifacts: Maven `target/` output directories and embedded H2 files (`.localdb`, `*.mv.db`, `*.trace.db`) are excluded via `.gitignore` to keep commits clean. If you need a fresh build: `./mvnw clean package` (or delete `target/`).
 
 ## 📦 Offline Build Verification
 After the first successful run (dependencies cached in local Maven repo), you can verify an offline build:
