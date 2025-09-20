@@ -335,6 +335,30 @@ Then rebuild / restart the app.
 
 Open an issue with the failing payload and console log if the problem persists.
 
+### Foreign Key Error 23506 on Insert
+If you see a stack trace ending with something like:
+```
+INSERT INTO REIMBURSEMENT (...) ... [23506-224]
+```
+Cause: The `eid` (employee id) or `cid` (category id) in the payload does not reference existing rows, triggering a foreign key constraint failure.
+
+Typical Reasons:
+1. Session lost: `localStorage` user array empty so `eid` became `undefined` and later parsed to `0`.
+2. Navigated directly to `employees.html` without logging in (no session reconstruction possible).
+3. Database reset (e.g., `.localdb` deleted) while browser still held stale session data referencing now‑missing employee ids.
+
+Mitigations Implemented:
+- Frontend validates `eid` before submitting and aborts with a user message if invalid.
+- Backend rejects create when `eid <= 0` or `cid <= 0` with HTTP 400 instead of attempting the insert.
+
+Recovery Steps:
+1. Clear local/session storage: Open DevTools > Application > Storage and remove keys `data`, `email`, `role`.
+2. Reload `index.html` and log in again (select proper role).
+3. Ensure categories load (network request to `/expense-categories` returns 200) before submitting.
+4. Retry submission and watch network tab for `PUT /reimbursement` -> 200.
+
+If the issue persists, hit `GET /diag/db` to ensure employee and expense_category counts are non-zero.
+
 ### NumberFormatException: For input string: "undefined"
 If you see a stack trace in the server log like:
 ```

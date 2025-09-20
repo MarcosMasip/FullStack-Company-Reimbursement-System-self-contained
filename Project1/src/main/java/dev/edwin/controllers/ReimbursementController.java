@@ -23,6 +23,10 @@ public class ReimbursementController {
         {
             Reimbursement reimbursement = gson.fromJson(body, Reimbursement.class);
             if(reimbursement != null) {
+                if (reimbursement.getEid() <= 0 || reimbursement.getCid() <= 0) {
+                    ctx.status(400).result("{\"error\":\"cid and eid must be positive integers\"}");
+                    return;
+                }
                 Reimbursement returned = rserv.createReimbursement(reimbursement);
                 if (returned == null) {
                     ctx.status(500).result("{\"error\":\"Failed to persist reimbursement\"}");
