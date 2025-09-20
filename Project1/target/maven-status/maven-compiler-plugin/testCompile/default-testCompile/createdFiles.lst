@@ -6,7 +6,9 @@ dev/edwin/services/EmployeeServiceTest.class
 dev/edwin/servicetests/ManagerServiceTest.class
 dev/edwin/servicetests/mockito/ExpenseCategoryServiceTest.class
 dev/edwin/servicetests/ExpenseCategoryServiceTest.class
+dev/edwin/HealthEndpointTest.class
 dev/edwin/servicetests/mockito/ReimbursementServiceTest.class
+dev/edwin/TestDBInit.class
 dev/edwin/servicetests/mockito/EmployeeMockitoTests.class
 dev/edwin/servicetests/EmployeeServiceTest.class
 dev/edwin/daotests/ExpenseCategoryDAOTest.class

@@ -5,18 +5,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-
-import dev.edwin.entities.Manager;
 import dev.edwin.utils.ConnectionUtil;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-
 import dev.edwin.entities.Employee;
-import dev.edwin.utils.HibernateUtil;
 
 
 

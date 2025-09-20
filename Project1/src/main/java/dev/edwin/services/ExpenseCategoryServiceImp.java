@@ -4,13 +4,9 @@ import dev.edwin.daos.ExpenseCategoryDAO;
 import dev.edwin.daos.ExpenseCategoryDAOImp;
 import dev.edwin.entities.ExpenseCategory;
 
-import javax.inject.Inject;
 import java.util.List;
 
 public class ExpenseCategoryServiceImp implements ExpenseCategoryService {
-
-    @Inject
-//    private ExpenseCategoryDAO edao;
 
     private static ExpenseCategoryDAO edao = ExpenseCategoryDAOImp.getEdao();
 

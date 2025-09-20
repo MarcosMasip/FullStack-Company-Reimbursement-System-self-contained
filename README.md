@@ -6,19 +6,19 @@ Self‑contained Java (Javalin) + vanilla JS expense reimbursement demo. Employe
 The project now runs 100% locally with an embedded H2 database (MariaDB compatibility mode) – no external services required. A single command builds and launches the app and auto‑seeds sample data.
 
 ## 🚀 Quick Start
-Clone and run (macOS/Linux):
+Clone the repository, then run a SINGLE command (macOS/Linux) from repo root (no need to install Maven or create a database manually—wrapper + embedded DB handle everything):
 
 ```bash
 ./run.sh
 ```
 
-Windows (Command Prompt or PowerShell):
+Windows (Command Prompt or PowerShell) from repo root (also a single command):
 
 ```bat
 run.bat
 ```
 
-Then open:
+You can also run the scripts inside `Project1/` directly (advanced use). Then open:
 
 ```
 http://localhost:7070/public/index.html
@@ -106,13 +106,13 @@ Build only:
 Run jar directly (after build):
 
 ```bash
-java -jar target/Project1-0.0.1-SNAPSHOT-shaded.jar
+java -jar target/Project1-0.0.1-SNAPSHOT.jar
 ```
 
 Force remote DB (if configured):
 
 ```bash
-java -DB_MODE=REMOTE -jar target/Project1-0.0.1-SNAPSHOT-shaded.jar
+java -DB_MODE=REMOTE -jar target/Project1-0.0.1-SNAPSHOT.jar
 ```
 
 ## 🧪 Testing Notes
@@ -131,10 +131,22 @@ After the first successful run (dependencies cached in local Maven repo), you ca
 Then launch:
 
 ```bash
-java -jar target/Project1-0.0.1-SNAPSHOT-shaded.jar
+java -jar target/Project1-0.0.1-SNAPSHOT.jar
 ```
 
 If you need to clear the embedded database, delete the `.localdb/` directory and restart.
+
+### Build Only (Skip Starting Server)
+To just compile (useful in CI or to warm the local Maven cache) without launching Javalin:
+
+```bash
+./run.sh --no-start
+```
+Or (inside `Project1/`):
+
+```bash
+./run.sh --build-only
+```
 
 ## 🧭 Roadmap / Ideas
 - Optional Docker Compose (MariaDB + app)
@@ -167,3 +179,19 @@ See `LICENSE`.
 
 ---
 Questions or contributions welcome.
+
+## ❗ Troubleshooting Execution Permission (macOS/Linux)
+If you see `permission denied: ./run.sh` after cloning:
+
+```bash
+chmod +x run.sh Project1/run.sh Project1/mvnw
+./run.sh
+```
+
+Or invoke explicitly via bash:
+
+```bash
+bash run.sh
+```
+
+Git sometimes strips execute bits if they weren’t committed with them; the above fixes it once.

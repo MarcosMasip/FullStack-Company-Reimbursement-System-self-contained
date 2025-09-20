@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.inject.Inject;
 
 import dev.edwin.daos.EmployeeDAO;
 import dev.edwin.daos.EmployeeDAOImp;
@@ -16,9 +15,7 @@ public class EmployeeServiceImp implements EmployeeService {
 
 	private static EmployeeService eserv = null;
 	
-	@Inject
-	private EmployeeDAO edao;
-//	private static EmployeeDAO edao = EmployeeDAOImp.getEdao();
+	private EmployeeDAO edao = EmployeeDAOImp.getEdao();
 	
 	private EmployeeServiceImp() {
 		super();

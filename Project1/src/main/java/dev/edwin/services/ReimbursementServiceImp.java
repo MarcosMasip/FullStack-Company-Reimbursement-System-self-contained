@@ -5,13 +5,9 @@ import dev.edwin.daos.ReimbursementDAOImp;
 import dev.edwin.entities.Employee;
 import dev.edwin.entities.Reimbursement;
 
-import javax.inject.Inject;
 import java.util.*;
 
 public class ReimbursementServiceImp implements ReimbursementService {
-
-    @Inject
-//    private  ReimbursementDAO rdao ;
 
     private static ReimbursementDAO rdao = ReimbursementDAOImp.getRdao();
 

@@ -47,8 +47,12 @@ public class ConnectionUtil {
 	private static Connection embeddedConnection() throws SQLException {
 		// H2 file database inside project directory .localdb; INIT runs schema + data (idempotent for schema)
 		// MODE=MariaDB for compatibility with past SQL dialect
-		String url = "jdbc:h2:file:./.localdb/reimburse;MODE=MariaDB;AUTO_SERVER=TRUE;" +
-				"INIT=RUNSCRIPT FROM 'classpath:db/schema.sql'\;RUNSCRIPT FROM 'classpath:db/data.sql'";
+		// Note: To chain multiple RUNSCRIPT commands, H2 requires escaping the semicolon as \\; inside the URL.
+		// In a Java string we must escape the backslash itself, hence "\\;" below yields "\;" at runtime.
+		String url = "jdbc:h2:file:./.localdb/reimburse;" +
+				"MODE=MariaDB;" +
+				"AUTO_SERVER=TRUE;" +
+				"INIT=RUNSCRIPT FROM 'classpath:db/schema.sql'\\;RUNSCRIPT FROM 'classpath:db/data.sql'";
 		return DriverManager.getConnection(url, "sa", "");
 	}
 }

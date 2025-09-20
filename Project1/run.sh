@@ -2,19 +2,33 @@
 set -euo pipefail
 
 # Single-command build & run script for macOS/Linux
-# Usage: ./run.sh [--remote-db]
+# Usage: ./run.sh [--remote-db] [--no-start|--build-only]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 DB_MODE="EMBEDDED"
-if [[ "${1:-}" == "--remote-db" ]]; then
-  DB_MODE="REMOTE"
-fi
+START_APP=true
+
+for arg in "$@"; do
+  case "$arg" in
+    --remote-db)
+      DB_MODE="REMOTE";
+      shift ;;
+    --no-start|--build-only)
+      START_APP=false;
+      shift ;;
+    *)
+      # leave unknown args for the java process
+      ;;
+  esac
+done
 
 echo "[run.sh] Selected DB_MODE=$DB_MODE"
 
-JAR_PATTERN="target/Project1-0.0.1-SNAPSHOT-shaded.jar"
+# The shade plugin currently outputs an unclassified jar named Project1-0.0.1-SNAPSHOT.jar
+# (dependency-reduced-pom.xml present). Adjust pattern accordingly.
+JAR_PATTERN="target/Project1-0.0.1-SNAPSHOT.jar"
 
 # Ensure Maven Wrapper exists (fallback to system mvn if absent)
 MVN_CMD="./mvnw"
@@ -50,5 +64,9 @@ if [[ ! -f $JAR_PATTERN ]]; then
   exit 1
 fi
 
-echo "[run.sh] Starting application on http://localhost:7070 (DB_MODE=$DB_MODE)"
-exec java -DB_MODE="$DB_MODE" -jar "$JAR_PATTERN" "$@"
+if $START_APP; then
+  echo "[run.sh] Starting application on http://localhost:7070 (DB_MODE=$DB_MODE)"
+  exec java -DB_MODE="$DB_MODE" -jar "$JAR_PATTERN" "$@"
+else
+  echo "[run.sh] Build completed. Skipping startup due to --no-start flag."
+fi

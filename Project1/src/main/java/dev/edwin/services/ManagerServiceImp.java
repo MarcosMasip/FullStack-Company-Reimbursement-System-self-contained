@@ -4,13 +4,9 @@ import dev.edwin.daos.ManagerDAO;
 import dev.edwin.daos.ManagerDAOImp;
 import dev.edwin.entities.Manager;
 
-import javax.inject.Inject;
 import java.util.List;
 
 public class ManagerServiceImp implements ManagerService {
-
-    @Inject
-//    private ManagerDAO mdao;
 
     private ManagerDAO mdao = ManagerDAOImp.getMdao();
 
