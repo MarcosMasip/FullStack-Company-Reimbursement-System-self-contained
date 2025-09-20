@@ -92,6 +92,10 @@ async function login() {
             return;
         }
         if (info[0].password === pw) {
+            try {
+                // Persist the returned user array so role pages can read ids (eid/mgid)
+                localStorage.setItem('data', JSON.stringify(info));
+            } catch(e) { console.warn('[login] Failed to cache user data', e); }
             window.location = `${origin}/${role}.html`;
         } else {
             showErrorMsg("Invalid password.");

@@ -65,12 +65,28 @@ public class ConnectionUtil {
 			synchronized (initLock) {
 				if (!embeddedInitialized) {
 					runScript(conn, "db/schema.sql", true);
-					runScript(conn, "db/data.sql", false);
+					// Only seed if no managers exist (proxy for fresh DB)
+					if (isTableEmpty(conn, "MANAGER")) {
+						System.out.println("[ConnectionUtil] Seeding sample data (tables empty)");
+						runScript(conn, "db/data.sql", false);
+					} else {
+						System.out.println("[ConnectionUtil] Seed data skipped (already present)");
+					}
 					embeddedInitialized = true;
 				}
 			}
 		}
 		return conn;
+	}
+
+	private static boolean isTableEmpty(Connection conn, String table) {
+		try (java.sql.Statement st = conn.createStatement();
+		     java.sql.ResultSet rs = st.executeQuery("SELECT COUNT(*) AS ct FROM " + table)) {
+			if (rs.next()) return rs.getInt("ct") == 0;
+		} catch (SQLException e) {
+			System.err.println("[ConnectionUtil] Could not count table " + table + ": " + e.getMessage());
+		}
+		return true; // fallback treat as empty so we seed rather than miss required data
 	}
 
 	private static void runScript(Connection conn, String classpathResource, boolean stopOnError) {
