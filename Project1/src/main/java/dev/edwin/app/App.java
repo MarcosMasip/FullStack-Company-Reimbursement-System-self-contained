@@ -21,6 +21,7 @@ public class App {
 
 		app.get("/employees", EmployeeController.getAllEmployees);
 		app.get("/employee/:eid", EmployeeController.getEmployeeById);
+		app.get("/employee-by-email", EmployeeController.getEmployeeSingleByEmail);
 
 		app.post("/employee", EmployeeController.updateEmployee);
 		app.delete("/employee", EmployeeController.deleteEmployee);

@@ -159,6 +159,7 @@ Frontend:
 | PUT | /employee | Create employee |
 | GET | /employees | List employees |
 | GET | /employee/:eid | Get employee |
+| GET | /employee-by-email?email= | Get single employee by email (session repair) |
 | POST | /employee | Update employee |
 | DELETE | /employee | Delete employee |
 | (Similar groups for managers, reimbursements, expense categories) | | |
@@ -358,6 +359,16 @@ Recovery Steps:
 4. Retry submission and watch network tab for `PUT /reimbursement` -> 200.
 
 If the issue persists, hit `GET /diag/db` to ensure employee and expense_category counts are non-zero.
+
+### Persistent "Session invalid" After Login
+If employees.html shows "Session invalid" even after a fresh login:
+1. Open DevTools Console and run `sessionStorage.getItem('email')` – must be the email you entered.
+2. Run `localStorage.getItem('data')` – should be a JSON array with an object containing `eid`.
+3. The app now includes a repair link (Attempt repair). Clicking it triggers a fetch to `/employee-by-email?email=...` and repopulates localStorage.
+4. If repair fails: clear storage (`localStorage.removeItem('data'); sessionStorage.clear();`) and re-login.
+5. Directly test endpoint: `curl 'http://localhost:7070/employee-by-email?email=alice@example.com'` to confirm a 200 JSON payload with an `eid`.
+
+This flow was added to handle edge cases where the employee page is opened directly (bookmark) before a successful login sequence or where stale malformed data remained in localStorage.
 
 ### NumberFormatException: For input string: "undefined"
 If you see a stack trace in the server log like:

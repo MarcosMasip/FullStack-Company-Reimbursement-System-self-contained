@@ -13,6 +13,10 @@
 
 const BASE = window.location.origin; // dynamic base for self-contained mode
 
+function currentRole(){
+    try { return sessionStorage.getItem('role'); } catch(e){ return null; }
+}
+
 function safeUserArray() {
     try {
         const raw = localStorage.getItem("data");
@@ -46,6 +50,14 @@ async function populateEmployeeTable(){
     }
     if (userArr.length === 0) {
         console.warn("[employee] No user data in localStorage; redirecting to login");
+        const tb = document.getElementById('tableBody');
+        if (tb) tb.innerHTML = `<tr><td colspan="4" class="text-center text-warning">No session. Please <a href='index.html'>login</a>.</td></tr>`;
+        return;
+    }
+    // Ensure role matches this page
+    if (currentRole() && currentRole() !== 'employees') {
+        console.warn('[employee] Role mismatch (role=' + currentRole() + ') redirecting to index');
+        window.location = 'index.html';
         return;
     }
     const eidRaw = userArr[0].eid;
@@ -176,8 +188,10 @@ async function populateBullets(){
 async function uploadNewReimbursement(event){
     if (event) event.preventDefault();
     const userArr = safeUserArray();
+    if (currentRole() && currentRole() !== 'employees') { alert('Invalid role for creating reimbursements.'); return; }
     if (userArr.length === 0) { alert("Session expired. Please login again."); return; }
     const eid = userArr[0].eid;
+    if (!eid || isNaN(parseInt(eid,10))) { alert('Invalid employee id in session. Please re-login.'); return; }
     let employee_note = document.getElementById("rComment").value.trim();
     let rAmountRaw = document.getElementById("amount").value.trim();
     const rAmount = parseFloat(rAmountRaw);

@@ -96,6 +96,21 @@ public class EmployeeController
 		ctx.result(json);
 		ctx.status(200);
 	};
+
+	// New: single employee by email (robust session reconstruction)
+	public static Handler getEmployeeSingleByEmail = ctx -> {
+		String email = ctx.queryParam("email");
+		if (email == null || email.trim().isEmpty()) {
+			ctx.status(400).result("{\"error\":\"email query parameter required\"}");
+			return;
+		}
+		Employee e = eserv.getEmployeeByEmail(email.trim());
+		if (e == null) {
+			ctx.status(404).result("{\"error\":\"employee not found\"}");
+			return;
+		}
+		ctx.status(200).result(gson.toJson(e));
+	};
 	
 	
 	public static Handler updateEmployee = (ctx) -> {
