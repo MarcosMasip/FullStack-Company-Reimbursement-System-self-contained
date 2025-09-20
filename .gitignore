@@ -30,3 +30,7 @@ hs_err_pid*
 Project1/.localdb/
 *.mv.db
 *.trace.db
+
+# Maven build output
+target/
+Project1/target/
