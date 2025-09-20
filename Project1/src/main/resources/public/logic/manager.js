@@ -12,7 +12,11 @@
 </tr> */
 var employeeId;
 var reimbursementId;
-const BASE = window.location.origin;
+// Robust base resolution: if user opens HTML directly (file://) fallback to relative root so fetch works against running server on same host/port when served.
+let BASE = window.location.origin;
+if (!BASE || BASE.startsWith('file:')) {
+    BASE = '';
+}
 let updateInFlight = false;
 
 function safeManagerArray(){
@@ -49,6 +53,13 @@ async function reconstructManagerSessionIfNeeded(){
     return [];
 }
 
+function renderStatusCell(status){
+    // 0=pending,1=approved,2=denied
+    if (status === 1) return '<span class="badge badge-success">Approved</span>';
+    if (status === 2) return '<span class="badge badge-danger">Denied</span>';
+    return '<span class="badge badge-secondary">Pending</span>';
+}
+
 async function populateManagerTable(){
     let tableBody = document.getElementById("tableBody");
     tableBody.innerHTML = '';
@@ -75,14 +86,21 @@ async function populateManagerTable(){
         if (!response.ok) throw new Error('HTTP ' + response.status);
         let info = await response.json();
         for (const element of info) {
-            let cData = await fetchCategoryData(element.cid);
+            let cData;
+            try {
+                cData = await fetchCategoryData(element.cid);
+            } catch(errCat){
+                console.warn('[manager] Failed to fetch category', element.cid, errCat);
+                cData = { title: 'Unknown' };
+            }
+            const statusHtml = renderStatusCell(element.status);
             tableBody.innerHTML += `
-                <tr>
+                <tr data-rid="${element.rid}">
                     <td class="text-center">${cData.title}</td>
                     <td class="text-center" style="word-wrap: break-word;">${element.employee_note || ''}</td>
                     <td class="text-center">${element.amount}</td>
-                    <td class="text-center">  
-                        <button onclick="populateEmployeeModal(${element.eid},${element.rid});" type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Open modal</button>
+                    <td class="text-center">${statusHtml}<br>
+                        <button style="margin-top:4px;" onclick="populateEmployeeModal(${element.eid},${element.rid});" type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#myModal">Details</button>
                     </td>
                 </tr>`;
         }
@@ -97,7 +115,7 @@ async function populateManagerTable(){
         }
     } catch (e){
         console.error('[manager] Failed to load reimbursements', e);
-        tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load reimbursements</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load reimbursements. ${e && e.message ? e.message : ''}</td></tr>`;
     }
 }
 
