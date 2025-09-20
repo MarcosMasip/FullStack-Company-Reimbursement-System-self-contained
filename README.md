@@ -3,7 +3,7 @@
 Self‑contained Java (Javalin) + vanilla JS expense reimbursement demo. Employees submit reimbursements; managers review/approve/deny.
 
 ## ✨ What's New (Self-Contained Mode)
-The project now runs 100% locally with an embedded H2 database (MariaDB compatibility mode) – no external services required. A single command builds and launches the app and auto‑seeds sample data.
+The project now runs 100% locally with an embedded H2 database (MariaDB compatibility mode) – no external services required. A single command builds and launches the app and auto‑seeds sample data. The schema + seed scripts are executed programmatically on first access (no fragile H2 `INIT` chaining) for clearer logging and resilience.
 
 ## 🚀 Quick Start
 Follow these steps exactly (works on macOS, Linux, and Windows). No manual DB setup and no global Maven install required.
@@ -37,12 +37,15 @@ Windows (PowerShell or CMD):
 run.bat
 ```
 
-First run expected output (abridged):
+First run expected output (abridged) – note the dynamic port selection (7070 preferred, auto-fallback if busy):
 ```
 [run.sh] Selected DB_MODE=EMBEDDED
 [run.sh] Building project (this may download dependencies the first time)
 ... (Maven downloads) ...
-[run.sh] Starting application on http://localhost:7070 (DB_MODE=EMBEDDED)
+[# may show different port if 7070 in use]
+[run.sh] Starting application (DB_MODE=EMBEDDED)
+INFO io.javalin.Javalin - Starting Javalin ...
+INFO io.javalin.Javalin - Listening on http://localhost:7070/
 INFO io.javalin.Javalin - Starting Javalin ...
 INFO io.javalin.Javalin - Listening on http://localhost:7070/
 INFO io.javalin.Javalin - Javalin started in XXms \o/
@@ -52,7 +55,7 @@ Subsequent runs (with no code changes) expected output:
 ```
 [run.sh] Selected DB_MODE=EMBEDDED
 [run.sh] Reusing existing build (no changes detected)
-[run.sh] Starting application on http://localhost:7070 (DB_MODE=EMBEDDED)
+[run.sh] Starting application (DB_MODE=EMBEDDED)
 ...
 ```
 
@@ -72,10 +75,14 @@ Expected response body:
 {"status":"UP"}
 ```
 
-### 6. (Optional) Build Only (CI / cache warm)
+### 6. (Optional) Build Only / Flags (CI / cache warm)
 ```
-./run.sh --no-start   # macOS/Linux
-run.bat build         # Windows (if you add a simple 'build' mode later)
+./run.sh --no-start        # Build only (skip launching)
+./run.sh --force-build     # Force rebuild even if no changes detected
+./run.sh --port 8081       # Prefer a specific port
+./run.sh --remote-db       # Use connection.properties (MariaDB)
+
+WINDOWS: run.bat currently mirrors only the basic start (extend if needed).
 ```
 
 You can also run the scripts inside `Project1/` directly (advanced use), but root scripts are preferred.
@@ -118,10 +125,10 @@ First run downloads dependencies. After that you can work offline:
 ./mvnw -o package
 ```
 
-## 🔄 Database Modes
-Embedded (default): file DB stored under `./.localdb/` (created automatically). Schema + seed run on first startup via H2 `INIT`.
+## 🔄 Database Modes & Initialization
+Embedded (default): file DB stored under `./.localdb/` (created automatically). Schema + seed run only once per JVM startup via a simple SQL parser that accumulates statements until a semicolon. This avoids brittle escaping issues previously seen with H2 URL `INIT` sequences.
 
-Remote (legacy MariaDB) mode (requires `connection.properties` still pointing to a reachable server):
+Remote (legacy MariaDB) mode (requires `connection.properties` pointing to a reachable server):
 
 ```bash
 ./run.sh --remote-db
@@ -148,6 +155,7 @@ Frontend:
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | /health | Liveness check |
+| GET | /diag/db | Embedded DB diagnostics (counts) |
 | PUT | /employee | Create employee |
 | GET | /employees | List employees |
 | GET | /employee/:eid | Get employee |
@@ -201,7 +209,17 @@ Then launch:
 java -jar target/Project1-0.0.1-SNAPSHOT.jar
 ```
 
-If you need to clear the embedded database, delete the `.localdb/` directory and restart.
+If you need to clear the embedded database, stop the app, delete the `.localdb/` directory (ignored by git), then restart. The schema + seed will be re-applied.
+
+### Diagnostics Endpoint
+```
+curl http://localhost:7070/diag/db
+```
+Example response:
+```json
+{"ok":true,"manager":1,"employee":3,"expense_category":3,"reimbursement":3}
+```
+If you see `{"ok":false,"error":"no-connection"}` the schema initialization failed early; inspect console logs for `[ConnectionUtil]` errors and optionally delete `.localdb/` before retrying.
 
 ### Login Troubleshooting
 - Ensure you selected the correct role (Manager vs Employee) radio button.
@@ -228,9 +246,10 @@ Expected output (abridged):
 
 ## 🧭 Roadmap / Ideas
 - Optional Docker Compose (MariaDB + app)
-- Authentication / session handling
+- Authentication / session handling (server-side /login endpoint)
 - Enum for reimbursement status
 - Frontend UX improvements
+- Structured error responses when DB unavailable
 
 ### (Future) Docker Compose Example (Not Included Yet)
 Potential `docker-compose.yml` (future):
