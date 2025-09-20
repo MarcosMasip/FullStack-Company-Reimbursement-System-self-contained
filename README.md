@@ -334,3 +334,22 @@ Then rebuild / restart the app.
 - Delete the `.localdb/` directory to reset (data will be reseeded) if schema drift occurred.
 
 Open an issue with the failing payload and console log if the problem persists.
+
+### NumberFormatException: For input string: "undefined"
+If you see a stack trace in the server log like:
+```
+java.lang.NumberFormatException: For input string: "undefined"
+	at java.lang.Integer.parseInt(...)
+	at dev.edwin.controllers.ReimbursementController.getAllReimbursements(...)
+```
+Cause: The browser issued a request such as `/reimbursements?employeeId=undefined` (often due to a lost/cleared `localStorage` session before the employee page attempted to load data).
+
+Mitigations Implemented:
+1. Backend now safely parses numeric query params and returns HTTP 400 with a JSON error instead of throwing.
+2. Frontend (`employee.js`) validates `eid` before making the fetch and shows a session warning if invalid.
+
+How to Fix Locally if Still Occurs:
+- Open DevTools > Application > Local Storage and remove the `data` key, then log in again.
+- Ensure you navigated to the correct `employees.html` via successful login (don’t open the page directly in a fresh tab without context).
+- Confirm the network request URL does not contain `undefined`.
+

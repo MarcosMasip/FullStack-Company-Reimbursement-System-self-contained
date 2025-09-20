@@ -48,7 +48,14 @@ async function populateEmployeeTable(){
         console.warn("[employee] No user data in localStorage; redirecting to login");
         return;
     }
-    const eid = userArr[0].eid;
+    const eidRaw = userArr[0].eid;
+    const eid = typeof eidRaw === 'number' ? eidRaw : parseInt(eidRaw, 10);
+    if (!Number.isInteger(eid) || eid <= 0) {
+        console.error('[employee] Invalid eid in cached user array', eidRaw, userArr[0]);
+        const tableBody = document.getElementById('tableBody');
+        if (tableBody) tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Session invalid. Please log out and log back in.</td></tr>`;
+        return;
+    }
     let tableBody = document.getElementById("tableBody");
     tableBody.innerHTML = "";
     try {

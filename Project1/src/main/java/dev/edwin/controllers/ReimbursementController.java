@@ -24,16 +24,20 @@ public class ReimbursementController {
             Reimbursement reimbursement = gson.fromJson(body, Reimbursement.class);
             if(reimbursement != null) {
                 Reimbursement returned = rserv.createReimbursement(reimbursement);
-                ctx.result(gson.toJson(returned));
-                ctx.status(200);
+                if (returned == null) {
+                    ctx.status(500).result("{\"error\":\"Failed to persist reimbursement\"}");
+                } else {
+                    ctx.result(gson.toJson(returned));
+                    ctx.status(200);
+                }
             }
             else
-                ctx.status(404);
+                ctx.status(400).result("{\"error\":\"Invalid JSON payload\"}");
 
 
         }catch (Exception e)
         {
-            ctx.status(404);
+            ctx.status(400).result("{\"error\":\"Malformed reimbursement payload\",\"detail\":\""+ e.getClass().getSimpleName() +"\"}");
             e.printStackTrace();
         }
 
@@ -65,18 +69,34 @@ public class ReimbursementController {
         String sortStatusDate = ctx.queryParam("sort_status_date");
         String sortSubmitDate = ctx.queryParam("sort_submit_date");
 
+        // Helper to parse ints safely; returns null if invalid
+        java.util.function.Function<String, Integer> safeInt = (s) -> {
+            if (s == null) return null;
+            String trimmed = s.trim();
+            if (trimmed.isEmpty() || trimmed.equalsIgnoreCase("undefined") || trimmed.equalsIgnoreCase("null")) return null;
+            try { return Integer.parseInt(trimmed); } catch (NumberFormatException nfe) { return null; }
+        };
+
         List<Reimbursement> reimbursements = new ArrayList<Reimbursement>();
-        if (employee != null)
+        Integer empId = safeInt.apply(employee);
+        Integer catId = safeInt.apply(category);
+        Integer mgrId = safeInt.apply(manager);
+
+        if (employee != null && empId == null) { ctx.status(400).result("{\"error\":\"employeeId must be an integer\"}"); return; }
+        if (category != null && catId == null) { ctx.status(400).result("{\"error\":\"categoryId must be an integer\"}"); return; }
+        if (manager != null && mgrId == null) { ctx.status(400).result("{\"error\":\"managerId must be an integer\"}"); return; }
+
+        if (empId != null)
         {
-            reimbursements = rserv.getReimbursementByEmployee(Integer.parseInt(employee));
+            reimbursements = rserv.getReimbursementByEmployee(empId);
         }
-        else if (category != null)
+        else if (catId != null)
         {
-            reimbursements = rserv.getReimbursementByCategory(Integer.parseInt(category));
+            reimbursements = rserv.getReimbursementByCategory(catId);
         }
-        else if (manager != null)
+        else if (mgrId != null)
         {
-            reimbursements = rserv.getReimbursementByManager(Integer.parseInt(manager));
+            reimbursements = rserv.getReimbursementByManager(mgrId);
         }
         else if(approvalStatus != null)
         {
@@ -123,8 +143,15 @@ public class ReimbursementController {
     public static Handler updateReimbursement = (ctx) -> {
         String body = ctx.body();
         Reimbursement reimbursement = gson.fromJson(body, Reimbursement.class);
+        if (reimbursement == null) {
+            ctx.status(400).result("{\"error\":\"Invalid JSON payload\"}");
+            return;
+        }
         Reimbursement result = rserv.updateReimbursement(reimbursement);
-
+        if (result == null) {
+            ctx.status(404).result("{\"error\":\"Reimbursement not found or not updated\"}");
+            return;
+        }
         ctx.result(gson.toJson(result));
         ctx.status(202);
 
