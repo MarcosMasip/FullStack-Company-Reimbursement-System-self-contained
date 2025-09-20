@@ -178,7 +178,19 @@ async function uploadNewReimbursement(event){
     if (!selInput) { alert("Select a category."); return; }
     if (isNaN(rAmount) || rAmount <= 0) { alert("Amount must be a positive number."); return; }
     const now = new Date().toISOString().slice(0,19).replace('T',' '); // mimic existing string style
-    const payload = { rid:0, amount:rAmount, submit_date: now, status:0, status_date: now, employee_note, manager_note:"", cid: selInput.value, eid };
+    // Ensure numeric types for backend (Gson expects numbers, not numeric strings)
+    const payload = { 
+        rid: 0,
+        amount: rAmount,
+        submit_date: now,
+        status: 0,
+        status_date: now,
+        employee_note,
+        manager_note: "",
+        cid: parseInt(selInput.value, 10),
+        eid: eid
+    };
+    console.debug('[employee] Submitting reimbursement payload', payload);
     try {
         const response = await fetch(`${BASE}/reimbursement`, {
             method: 'PUT',

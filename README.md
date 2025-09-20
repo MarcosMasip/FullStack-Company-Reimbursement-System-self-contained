@@ -294,3 +294,43 @@ bash run.sh
 ```
 
 Git sometimes strips execute bits if they weren’t committed with them; the above fixes it once.
+
+## 🐞 Reimbursement Not Appearing After Submission
+If, after clicking the plus button as an employee, the new reimbursement does not show up (and also is invisible to a manager), check the following:
+
+1. Browser console/network tab: Ensure the create request is a HTTP PUT to `/reimbursement` returning 200. A 404 here usually means JSON could not be deserialized.
+2. Payload numeric fields: The backend (Gson) expects numbers (not numeric strings) for `cid`, `eid`, `amount`, and `status`. Earlier code accidentally sent `cid` as a string which caused deserialization to fail silently and the controller to return 404.
+3. Verify local storage session: If `localStorage.getItem('data')` is empty the UI skips refresh.
+4. Force refresh: Use the in‑page refresh (or reload) to re-run `populateEmployeeTable()`.
+
+### Fix Implemented
+`employee.js` now converts the selected category radio value to an integer before submitting:
+```
+cid: parseInt(selInput.value, 10)
+```
+and logs the payload with `console.debug` for easier inspection.
+
+### Manual Patch (If Working From Older Commit)
+Edit `src/main/resources/public/logic/employee.js` inside `uploadNewReimbursement` and ensure your payload block matches:
+```
+const payload = {
+	rid:0,
+	amount:rAmount,
+	submit_date: now,
+	status:0,
+	status_date: now,
+	employee_note,
+	manager_note: "",
+	cid: parseInt(selInput.value, 10),
+	eid: eid
+};
+```
+
+Then rebuild / restart the app.
+
+### Still Not Showing?
+- Hit the diagnostics endpoint: `curl http://localhost:7070/diag/db` and confirm the `reimbursement` count increases.
+- Look for stack traces mentioning `NumberFormatException` or Gson in the server log.
+- Delete the `.localdb/` directory to reset (data will be reseeded) if schema drift occurred.
+
+Open an issue with the failing payload and console log if the problem persists.
