@@ -58,8 +58,9 @@ Subsequent runs (with no code changes) expected output:
 
 ### 4. Open the App
 ```
-http://localhost:7070/public/index.html
+http://localhost:7070/
 ```
+The server now redirects `/` to `index.html` automatically.
 
 ### 5. Verify Health Endpoint
 Browser or curl:
@@ -90,12 +91,19 @@ http://localhost:7070/health  -> {"status":"UP"}
 ```
 
 ## 🗄 Default Credentials (Seed Data)
-Manager: `manager1@example.com` / `password`
+Manager login example:
+```
+Email: manager1@example.com
+Password: password
+Role: Manager (radio button)
+```
 
-Employees:
-- `alice@example.com` / `password`
-- `bob@example.com` / `password`
-- `carol@example.com` / `password`
+Employee login examples (select Employee role):
+```
+alice@example.com / password
+bob@example.com   / password
+carol@example.com / password
+```
 
 Categories: Travel, Meals, Supplies.
 
@@ -194,6 +202,12 @@ java -jar target/Project1-0.0.1-SNAPSHOT.jar
 ```
 
 If you need to clear the embedded database, delete the `.localdb/` directory and restart.
+
+### Login Troubleshooting
+- Ensure you selected the correct role (Manager vs Employee) radio button.
+- Password for all seed users is `password`.
+- If the reimbursements pages show no data, refresh after first login (seed fetch may occur once per session).
+- Clear browser sessionStorage/localStorage if switching between roles repeatedly.
 
 ### Build Only (Skip Starting Server)
 To just compile (useful in CI or to warm the local Maven cache) without launching Javalin:

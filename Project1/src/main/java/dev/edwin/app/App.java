@@ -54,7 +54,14 @@ public class App {
 		app.delete("/reimbursement", ReimbursementController.deleteReimbursement);
 
 		// Health check
-		app.get("/health", ctx -> ctx.json("{\"status\":\"UP\"}"));
+		app.get("/health", ctx -> {
+			// Avoid invoking Javalin's object JSON mapping (Jackson not on classpath).
+			ctx.contentType("application/json");
+			ctx.result("{\"status\":\"UP\"}");
+		});
+
+		// Root convenience redirect (serve index.html)
+		app.get("/", ctx -> ctx.redirect("/index.html"));
 
 
 	}
