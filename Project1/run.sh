@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Single-command build & run script for macOS/Linux
-# Usage: ./run.sh [--remote-db] [--no-start|--build-only] [--force-build]
+# Usage: ./run.sh [--remote-db] [--no-start|--build-only] [--force-build] [--port <number>]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -10,6 +10,7 @@ cd "$SCRIPT_DIR"
 DB_MODE="EMBEDDED"
 START_APP=true
 FORCE_BUILD=false
+CUSTOM_PORT=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -22,6 +23,8 @@ for arg in "$@"; do
     --force-build)
       FORCE_BUILD=true;
       shift ;;
+    --port)
+      shift; CUSTOM_PORT="$1"; shift ;;
     *)
       # leave unknown args for the java process
       ;;
@@ -74,8 +77,14 @@ if [[ ! -f $JAR_PATTERN ]]; then
 fi
 
 if $START_APP; then
-  echo "[run.sh] Starting application on http://localhost:7070 (DB_MODE=$DB_MODE)"
-  exec java -DB_MODE="$DB_MODE" -jar "$JAR_PATTERN" "$@"
+  if [[ -n "$CUSTOM_PORT" ]]; then
+    echo "[run.sh] Using custom port $CUSTOM_PORT"
+    PORT_ARG="-DPORT=$CUSTOM_PORT"
+  else
+    PORT_ARG=""
+  fi
+  echo "[run.sh] Starting application (DB_MODE=$DB_MODE)" 
+  exec java $PORT_ARG -DB_MODE="$DB_MODE" -jar "$JAR_PATTERN" "$@"
 else
   echo "[run.sh] Build completed. Skipping startup due to --no-start flag."
 fi

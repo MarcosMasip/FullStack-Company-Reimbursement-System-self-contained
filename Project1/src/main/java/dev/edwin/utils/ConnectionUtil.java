@@ -1,8 +1,10 @@
 package dev.edwin.utils;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -20,8 +22,9 @@ public class ConnectionUtil {
 			}
 			return embeddedConnection();
 		} catch (Exception e) {
+			System.err.println("[ConnectionUtil] ERROR obtaining connection (mode=" + mode + ") : " + e.getMessage());
 			e.printStackTrace();
-			return null;
+			return null; // Downstream code now guards against null; NPEs avoided.
 		}
 	}
 
@@ -44,15 +47,79 @@ public class ConnectionUtil {
 		return DriverManager.getConnection(details);
 	}
 
+	// Ensure we only run schema + seed once per process
+	private static volatile boolean embeddedInitialized = false;
+	private static final Object initLock = new Object();
+
 	private static Connection embeddedConnection() throws SQLException {
-		// H2 file database inside project directory .localdb; INIT runs schema + data (idempotent for schema)
-		// MODE=MariaDB for compatibility with past SQL dialect
-		// Note: To chain multiple RUNSCRIPT commands, H2 requires escaping the semicolon as \\; inside the URL.
-		// In a Java string we must escape the backslash itself, hence "\\;" below yields "\;" at runtime.
-		String url = "jdbc:h2:file:./.localdb/reimburse;" +
-				"MODE=MariaDB;" +
-				"AUTO_SERVER=TRUE;" +
-				"INIT=RUNSCRIPT FROM 'classpath:db/schema.sql'\\;RUNSCRIPT FROM 'classpath:db/data.sql'";
-		return DriverManager.getConnection(url, "sa", "");
+		// Simpler URL; run scripts manually for clearer error reporting.
+		String url = "jdbc:h2:file:./.localdb/reimburse;MODE=MariaDB;AUTO_SERVER=TRUE";
+		try {
+			// Explicitly load driver (defensive for some older JVM setups)
+			Class.forName("org.h2.Driver");
+		} catch (ClassNotFoundException e) {
+			System.err.println("[ConnectionUtil] H2 Driver class not found: " + e.getMessage());
+		}
+		Connection conn = DriverManager.getConnection(url, "sa", "");
+		if (!embeddedInitialized) {
+			synchronized (initLock) {
+				if (!embeddedInitialized) {
+					runScript(conn, "db/schema.sql", true);
+					runScript(conn, "db/data.sql", false);
+					embeddedInitialized = true;
+				}
+			}
+		}
+		return conn;
+	}
+
+	private static void runScript(Connection conn, String classpathResource, boolean stopOnError) {
+		System.out.println("[ConnectionUtil] Running script: " + classpathResource);
+		try (InputStream in = ConnectionUtil.class.getClassLoader().getResourceAsStream(classpathResource)) {
+			if (in == null) {
+				System.err.println("[ConnectionUtil] Resource not found: " + classpathResource);
+				return;
+			}
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+				StringBuilder statement = new StringBuilder();
+				try (java.sql.Statement st = conn.createStatement()) {
+					String line;
+					while ((line = br.readLine()) != null) {
+						String trimmed = line.trim();
+						if (trimmed.startsWith("--") || trimmed.isEmpty()) {
+							continue; // skip comments and blank lines
+						}
+						statement.append(line).append('\n');
+						if (trimmed.endsWith(";")) {
+							String sql = statement.toString().trim();
+							// remove trailing semicolon for execute()
+							if (sql.endsWith(";")) sql = sql.substring(0, sql.length() - 1);
+							try {
+								st.execute(sql);
+							} catch (SQLException ex) {
+								System.err.println("[ConnectionUtil] Failed SQL: " + sql + " -> " + ex.getMessage());
+								if (stopOnError) throw ex;
+							}
+							statement.setLength(0);
+						}
+					}
+					// Handle trailing statement without semicolon (unlikely here)
+					if (statement.length() > 0) {
+						String sql = statement.toString().trim();
+						if (!sql.isEmpty()) {
+							try { st.execute(sql);} catch(SQLException ex){
+								System.err.println("[ConnectionUtil] Failed tail SQL: " + sql + " -> " + ex.getMessage());
+								if (stopOnError) throw ex;
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("[ConnectionUtil] Error running script " + classpathResource + ": " + e.getMessage());
+			if (stopOnError) {
+				throw new RuntimeException("Schema initialization failed: " + classpathResource, e);
+			}
+		}
 	}
 }
